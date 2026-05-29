@@ -1,0 +1,29 @@
+# Ignore environment files
+**/.env
+**/.env.example
+*.log
+__pycache__/
+*.pyc
+.next/
+node_modules/
+.DS_Store
+
+# Ignore credential files
+**/*.json
+!**/package.json
+!**/package-lock.json
+!**/tsconfig.json
+!**/components.json
+!**/app-path-routes-manifest.json
+!**/build-manifest.json
+!**/export-marker.json
+!**/fallback-build-manifest.json
+!**/images-manifest.json
+!**/next-minimal-server.js.nft.json
+!**/next-server.js.nft.json
+!**/prerender-manifest.json
+!**/routes-manifest.json
+!**/required-server-files.json
+!**/credentials.json
+!**/token.json
+!**/test-results/*.json
