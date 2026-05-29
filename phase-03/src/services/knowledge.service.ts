@@ -15,7 +15,7 @@ export const knowledgeService = {
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
     
-    const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/v1/knowledge/`, {
+    const response = await fetch(`${NEXT_PUBLIC_API_URL}/knowledge/`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',

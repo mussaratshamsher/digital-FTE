@@ -17,7 +17,7 @@ export const ticketService = {
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
     
-    const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/v1/tickets/`, {
+    const response = await fetch(`${NEXT_PUBLIC_API_URL}/tickets/`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',

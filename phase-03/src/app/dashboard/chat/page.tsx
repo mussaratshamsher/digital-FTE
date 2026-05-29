@@ -44,6 +44,7 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/lib/auth/supabase";
+import { NEXT_PUBLIC_API_URL } from "@/lib/constants";
 
 export default function ChatPage() {
   const { 
@@ -129,7 +130,7 @@ export default function ChatPage() {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/chat/message`, {
+      const response = await fetch(`${NEXT_PUBLIC_API_URL}/chat/message`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

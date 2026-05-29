@@ -20,7 +20,7 @@ export const executionService = {
     console.log("Debug - Session:", session);
     console.log("Debug - Token:", token);
     
-    const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/v1/logs/executions`, {
+    const response = await fetch(`${NEXT_PUBLIC_API_URL}/logs/executions`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
