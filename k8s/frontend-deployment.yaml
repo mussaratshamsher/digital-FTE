@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: DOCKERHUB_USERNAME/frontend:latest # Replace DOCKERHUB_USERNAME
+        image: mussaratshamsheer/frontend:latest # Replace DOCKERHUB_USERNAME
         ports:
         - containerPort: 3000
         env:
