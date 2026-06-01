@@ -17,6 +17,7 @@ from app.models.pending_review_model import PendingReview
 from app.tools.communication_tools import CommunicationTools
 from app.tools.crm_tools import CRMTools
 from app.tools.knowledge_tools import KnowledgeTools
+from app.logs.execution_logger import ExecutionLogger
 import json
 
 class ChatService:
@@ -68,7 +69,14 @@ class ChatService:
         conversation = None
         history_str = ""
         if thread_id:
-            conversation = await conv_repo.get_by_thread_id(thread_id)
+            # Explicitly load messages to avoid MissingGreenlet
+            from sqlalchemy.orm import selectinload
+            result = await self.db.execute(
+                select(Conversation)
+                .where(Conversation.thread_id == thread_id)
+                .options(selectinload(Conversation.messages))
+            )
+            conversation = result.scalar_one_or_none()
             
         if not conversation:
             conversation = await conv_repo.create(customer_id, channel, thread_id)
@@ -135,10 +143,23 @@ class ChatService:
                 # Pass enriched context to agents
                 output = await agent.run(task_desc, context=enriched_context, repo=self.exec_repo)
                 
-                # Special Action: If Support Agent wants to create a ticket
-                if agent_name == "Support" and "create ticket" in task_desc.lower():
-                    ticket_res = await self.crm_tools.create_ticket(customer_id, task_desc)
+                # Special Action: If Support Agent wants to create a ticket OR sentiment is extremely negative
+                is_support_task = agent_name == "Support"
+                sentiment_score = sentiment_data.get('score', 50)
+                should_create_ticket = is_support_task and (
+                    "create ticket" in task_desc.lower() or 
+                    "support ticket" in task_desc.lower() or 
+                    sentiment_score < 30
+                )
+                
+                await ExecutionLogger.log("Debug", f"Ticket check for {agent_name}", f"Score: {sentiment_score}, Task: {task_desc[:30]}, Result: {should_create_ticket}")
+
+                if should_create_ticket:
+                    await ExecutionLogger.log("System", f"Triggering ticket creation for Support task", task_desc)
+                    ticket_res = await self.crm_tools.create_ticket(customer_id, task_desc, sentiment_score=sentiment_data['score'])
                     output += f"\n[System: Ticket #{ticket_res['ticket_id']} created with {ticket_res['priority']} priority]"
+                elif is_support_task:
+                    await ExecutionLogger.log("System", f"Support agent did not trigger ticket creation", f"Task: {task_desc}")
 
                 await self.exec_repo.log_action(
                     agent_name=agent_name,
@@ -150,13 +171,15 @@ class ChatService:
                 )
                 outputs.append({"agent": agent_name, "output": output})
 
-        # 5. Yield Metadata
+        # 5. Yield Metadata (including Smart Suggestions)
+        suggestions = await IntelligenceService.generate_suggestions(message_content, history=history_str)
         metadata = {
             "conversation_id": conversation.id,
             "sentiment": sentiment_data['sentiment'],
             "sentiment_score": sentiment_data['score'],
             "strategic_reasoning": plan_data.get('strategic_reasoning', ""),
-            "is_sensitive": is_sensitive
+            "is_sensitive": is_sensitive,
+            "suggestions": suggestions
         }
         yield json.dumps(metadata) + "|||"
 
@@ -201,7 +224,7 @@ class ChatService:
         ai_msg = Message(conversation_id=conversation.id, sender_type="agent", content=full_response)
         self.db.add(ai_msg)
         
-        # 8. Update Lead Score (Async using 8B model)
+        # 8. Update Lead Score & Sentiment Health (Async using 8B model)
         if customer:
             lead_data = await IntelligenceService.calculate_lead_score(
                 {"name": customer.name, "company": customer.company, "history": crm_history},
@@ -209,7 +232,27 @@ class ChatService:
             )
             customer.lead_score = lead_data['score']
             customer.lead_status = lead_data['status']
+            
+            # Sentiment Health Tracking
+            customer.last_sentiment_score = sentiment_data['score']
+            if sentiment_data['score'] < 35:
+                customer.sentiment_health = "At Risk"
+            elif sentiment_data['score'] > 70:
+                customer.sentiment_health = "Strong"
+            else:
+                customer.sentiment_health = "Neutral"
+                
             self.db.add(customer)
+
+        # 9. Auto-Generate Conversation Summary (if history grows)
+        from sqlalchemy import func
+        msg_count_res = await self.db.execute(select(func.count(Message.id)).where(Message.conversation_id == conversation.id))
+        msg_count = msg_count_res.scalar()
+        
+        if msg_count > 4 and (msg_count % 5 == 0):
+            summary_history = history_str + f"user: {message_content}\nagent: {full_response}"
+            conversation.summary = await IntelligenceService.generate_summary(summary_history)
+            self.db.add(conversation)
 
         await self.db.commit()
 

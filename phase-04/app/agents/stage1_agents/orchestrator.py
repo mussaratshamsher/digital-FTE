@@ -87,3 +87,19 @@ class OrchestratorAgent:
         async for chunk in response:
             if chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content
+
+        # Append Professional Signature
+        if channel != "whatsapp": # WhatsApp doesn't usually need formal signatures
+            active_agents = [o['agent'] for o in agent_outputs]
+            signature = "\n\nBest regards,\n"
+            if "Sales" in active_agents:
+                signature += "Mussarat Shamsher - Sales & Growth Department"
+            elif "Support" in active_agents:
+                signature += "Mussarat Shamsher - Customer Support Team"
+            elif "PM" in active_agents:
+                signature += "Mussarat Shamsher - Project Management Office"
+            else:
+                signature += "Mussarat Shamsher - AI Operations Manager"
+            
+            for char in signature:
+                yield char

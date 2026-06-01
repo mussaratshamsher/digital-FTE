@@ -34,12 +34,20 @@ class CRMTools:
             {"date": str(customer.created_at), "action": "Account Created", "notes": f"Initial lead score: {customer.lead_score}"}
         ]
 
-    async def create_ticket(self, customer_id: int, issue: str, priority: str = "medium") -> Dict[str, Any]:
+    async def create_ticket(self, customer_id: int, issue: str, priority: str = "medium", sentiment_score: int = 50) -> Dict[str, Any]:
         await ExecutionLogger.log("CRM System", f"Creating ticket for {customer_id}: {issue}")
+        
+        # Sentiment-based priority escalation
+        final_priority = priority
+        if sentiment_score < 30:
+            final_priority = "urgent"
+        elif sentiment_score < 50:
+            final_priority = "high"
+            
         ticket_in = TicketCreate(
             customer_id=customer_id,
             issue_summary=issue,
-            priority=priority
+            priority=final_priority
         )
         ticket = await self.ticket_repo.create(ticket_in)
         return {"ticket_id": ticket.id, "status": ticket.status, "priority": ticket.priority}

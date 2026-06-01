@@ -1,0 +1,22 @@
+services:
+  backend:
+    build:
+      context: ../../phase-04
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.production
+    restart: always
+
+  frontend:
+    build:
+      context: ../../phase-03
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - NEXT_PUBLIC_API_URL=https://mussarat123shamsher-ai-employee.hf.space/api/v1
+    restart: always

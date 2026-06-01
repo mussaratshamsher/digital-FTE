@@ -12,7 +12,12 @@ class IntelligenceService:
         prompt = f"""
         Analyze the sentiment of the following text. 
         Return a JSON object with 'sentiment' (one of: Positive, Neutral, Negative, Frustrated, Excited) 
-        and 'score' (an integer from 0 to 100 where 100 is most positive/excited).
+        and 'score' (an integer from 0 to 100).
+        
+        SCORING RULE: 
+        - 0 is extremely negative, angry, or frustrated.
+        - 50 is neutral.
+        - 100 is extremely positive, happy, or excited.
 
         Text: {text}
         """
@@ -46,3 +51,43 @@ class IntelligenceService:
         except Exception as e:
             print(f"Lead Scoring Error: {e}")
             return {"score": 10, "status": "cold"}
+
+    @staticmethod
+    async def generate_suggestions(last_message: str, history: str = ""):
+        prompt = f"""
+        Based on the current business conversation, suggest 3 short, professional "Next Step" actions the user might want to take.
+        Suggestions should be concise (max 25 characters each).
+        Return a JSON object with a 'suggestions' key containing a list of strings.
+
+        History: {history}
+        Last Message: {last_message}
+        """
+        try:
+            response = await client.chat.completions.create(
+                model=SMALL_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                response_format={"type": "json_object"}
+            )
+            return json.loads(response.choices[0].message.content).get('suggestions', [])
+        except Exception as e:
+            print(f"Suggestion Generation Error: {e}")
+            return ["Tell me more", "Draft an email", "Create a plan"]
+
+    @staticmethod
+    async def generate_summary(history: str):
+        prompt = f"""
+        Provide a concise, one-sentence executive summary of the following business conversation.
+        Focus on the main objective and current status.
+
+        Conversation History:
+        {history}
+        """
+        try:
+            response = await client.chat.completions.create(
+                model=SMALL_MODEL,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            print(f"Summary Generation Error: {e}")
+            return "Ongoing business discussion."

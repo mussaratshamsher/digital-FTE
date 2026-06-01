@@ -21,6 +21,7 @@ class ConversationResponse(BaseModel):
     customer_id: int
     channel: str
     status: str
+    summary: Optional[str] = None
     created_at: datetime
     messages: List[MessageResponse] = []
 

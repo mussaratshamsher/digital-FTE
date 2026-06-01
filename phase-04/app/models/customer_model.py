@@ -13,4 +13,6 @@ class Customer(Base):
     company: Mapped[str] = mapped_column(String, nullable=True)
     lead_score: Mapped[int] = mapped_column(default=0)
     lead_status: Mapped[str] = mapped_column(String, default="new")
+    sentiment_health: Mapped[str] = mapped_column(String, default="Neutral") # Strong, Neutral, At Risk
+    last_sentiment_score: Mapped[int] = mapped_column(default=50)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

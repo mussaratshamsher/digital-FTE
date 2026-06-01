@@ -16,6 +16,7 @@ class Conversation(Base):
     thread_id: Mapped[str] = mapped_column(String(255), nullable=True, index=True)
     channel: Mapped[str] = mapped_column(String(50), default="web")
     status: Mapped[str] = mapped_column(String(50), default="active")
+    summary: Mapped[str] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     customer: Mapped["Customer"] = relationship("Customer")
