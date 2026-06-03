@@ -14,9 +14,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI CRM Digital Factory | Automated Business Workflow Solutions",
-  description: "Transform your business with our AI-powered CRM Digital Factory. Automated lead qualification, project management, and customer support workflows for modern enterprises.",
+  title: "Digital FTE | AI CRM Digital Factory & Automated Workflows",
+  description: "Digital FTE - The ultimate AI CRM Digital Factory. Transform your business with automated lead qualification, project management, and humanoid robotics workflow solutions.",
   keywords: [
+    "Digital FTE",
     "AI CRM",
     "Business Automation",
     "Digital Factory",
@@ -24,9 +25,36 @@ export const metadata: Metadata = {
     "Lead Qualification",
     "Project Logistics",
     "Customer Support AI",
-    "Agentic Workflows"
+    "Agentic Workflows",
+    "Humanoid Robotics"
   ],
-  authors: [{ name: "Hackathon Team" }],
+  authors: [{ name: "Mussarat Shamsher" }],
+  metadataBase: new URL("https://mussarat-digital-fte.vercel.app"),
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "Digital FTE | AI CRM Digital Factory",
+    description: "Automate your business operations with Digital FTE. The next generation of AI-powered CRM and workflow management.",
+    url: "https://mussarat-digital-fte.vercel.app",
+    siteName: "Digital FTE",
+    images: [
+      {
+        url: "/fte.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Digital FTE Preview",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Digital FTE | AI CRM Digital Factory",
+    description: "Automate your business operations with Digital FTE.",
+    images: ["/fte.jpg"],
+  },
   icons: {
     icon: "/fte.jpg",
   },
