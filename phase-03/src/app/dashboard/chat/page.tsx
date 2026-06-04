@@ -153,6 +153,7 @@ export default function ChatPage() {
       const assistantMsgId = (Date.now() + 1).toString();
       let fullContent = "";
       let metadataReceived = false;
+      let buffer = "";
 
       addMessage({
         id: assistantMsgId,
@@ -169,31 +170,35 @@ export default function ChatPage() {
 
         const chunk = decoder.decode(value, { stream: true });
         
-        if (!metadataReceived && chunk.includes("|||")) {
-          const parts = chunk.split("|||");
-          try {
-            const metadata = JSON.parse(parts[0]);
-            useChatStore.setState((state) => ({
-              conversations: state.conversations.map(c => 
-                c.id === activeConversationId 
-                  ? { 
-                      ...c, 
-                      messages: c.messages.map(m => 
-                        m.id === assistantMsgId ? { ...m, thoughts: metadata.strategic_reasoning } : m
-                      ) 
-                    } 
-                  : c
-              )
-            }));
-            
-            if (parts[1]) {
-                fullContent += parts[1];
-                updateStreamingMessage(assistantMsgId, fullContent);
+        if (!metadataReceived) {
+          buffer += chunk;
+          if (buffer.includes("|||")) {
+            const parts = buffer.split("|||");
+            try {
+              const metadata = JSON.parse(parts[0]);
+              useChatStore.setState((state) => ({
+                conversations: state.conversations.map(c => 
+                  c.id === activeConversationId 
+                    ? { 
+                        ...c, 
+                        messages: c.messages.map(m => 
+                          m.id === assistantMsgId ? { ...m, thoughts: metadata.strategic_reasoning } : m
+                        ) 
+                      } 
+                    : c
+                )
+              }));
+              
+              if (parts[1]) {
+                  fullContent += parts[1];
+                  updateStreamingMessage(assistantMsgId, fullContent);
+              }
+            } catch (e) {
+              console.error("Metadata parse error", e);
             }
-          } catch (e) {
-            console.error("Metadata parse error", e);
+            metadataReceived = true;
+            buffer = ""; // Clear buffer
           }
-          metadataReceived = true;
         } else {
           fullContent += chunk;
           updateStreamingMessage(assistantMsgId, fullContent);
