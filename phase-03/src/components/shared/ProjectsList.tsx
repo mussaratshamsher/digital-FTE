@@ -17,7 +17,7 @@ const projects = [
       "Real-time Decision Making",
       "Advanced Tool Integration"
     ],
-    demo: "https://ai-employee.vercel.app/",
+    demo: "https://mussarat-digital-fte.vercel.app/",
     code: "https://github.com/mussaratshamsher/Nexe-Agentic-AI-Intern/tree/master/03-advanced-level",
     color: "from-purple-500/20 to-indigo-500/20",
     border: "border-purple-500/50"
