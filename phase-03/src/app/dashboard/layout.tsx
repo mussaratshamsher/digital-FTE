@@ -45,6 +45,7 @@ export default function DashboardLayout({
 
   const handleLogout = async () => {
     await authService.signOut();
+    alert("You have been logged out.");
     router.push("/");
   };
 
@@ -123,7 +124,12 @@ export default function DashboardLayout({
               )}
             </div>
             <div className="h-8 w-px bg-border hidden md:block" />
-            <Button variant="ghost" onClick={handleLogout} className="p-2 text-muted-foreground hover:text-destructive transition-colors">
+            <Button 
+              variant="ghost" 
+              onClick={handleLogout} 
+              className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+              title="Logout"
+            >
               <LogOut className="w-5 h-5" />
             </Button>
           </div>
