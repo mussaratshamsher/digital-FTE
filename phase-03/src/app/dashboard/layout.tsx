@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { authService } from "@/services/auth.service";
 import { supabase } from "@/lib/auth/supabase";
 import { Button } from "@/components/ui/button";
@@ -31,22 +32,42 @@ export default function DashboardLayout({
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
 
   useEffect(() => {
-    const getUser = async () => {
+    const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      const localToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+
+      if (!user && !localToken) {
+        router.push("/auth/login");
+        return;
+      }
+
       if (user) {
         setUserProfile({
           name: user.user_metadata.full_name || user.email || 'User',
           avatar: user.user_metadata.avatar_url || null,
         });
+      } else {
+        // We have a local token but no Supabase user
+        setUserProfile({
+          name: 'Authorized User',
+          avatar: null,
+        });
       }
     };
-    getUser();
-  }, []);
+    checkAuth();
+  }, [router]);
 
   const handleLogout = async () => {
-    await authService.signOut();
-    alert("You have been logged out.");
-    router.push("/");
+    try {
+      await authService.signOut();
+      toast.success("Logged out successfully");
+      router.refresh(); // Clear server-side state/cookies
+      router.push("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Fallback redirect
+      window.location.href = "/";
+    }
   };
 
   return (

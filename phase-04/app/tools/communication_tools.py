@@ -7,12 +7,12 @@ from .gmail_tools import GmailService
 class CommunicationTools:
     @staticmethod
     async def send_email(to_email: str, subject: str, body: str, thread_id: str = None) -> bool:
-        ExecutionLogger.log("Communication", f"Sending email to {to_email}", f"Subject: {subject}")
+        await ExecutionLogger.log("Communication", f"Sending email to {to_email}", f"Subject: {subject}")
         return await GmailService.send_email(to_email, subject, body, thread_id)
 
     @staticmethod
     async def send_whatsapp_message(phone: str, message: str) -> bool:
-        ExecutionLogger.log("Communication", f"Sending WhatsApp to {phone}", f"Message: {message[:20]}...")
+        await ExecutionLogger.log("Communication", f"Sending WhatsApp to {phone}", f"Message: {message[:20]}...")
         
         # Try Twilio first if configured
         if settings.TWILIO_ACCOUNT_SID and settings.TWILIO_AUTH_TOKEN:
@@ -22,7 +22,7 @@ class CommunicationTools:
         if settings.ULTRAMSG_INSTANCE_ID and settings.ULTRAMSG_TOKEN:
             return await CommunicationTools._send_ultramsg_whatsapp(phone, message)
 
-        ExecutionLogger.log("Communication", "WhatsApp skipped", "No WhatsApp API configured (Twilio or Ultramsg)")
+        await ExecutionLogger.log("Communication", "WhatsApp skipped", "No WhatsApp API configured (Twilio or Ultramsg)")
         return False
 
     @staticmethod
@@ -58,10 +58,10 @@ class CommunicationTools:
                 if response.status_code in [200, 201]:
                     return True
                 else:
-                    ExecutionLogger.log("Communication", "Twilio failed", f"Status: {response.status_code}, Body: {response.text}")
+                    await ExecutionLogger.log("Communication", "Twilio failed", f"Status: {response.status_code}, Body: {response.text}")
                     return False
         except Exception as e:
-            ExecutionLogger.log("Communication", "Twilio error", str(e))
+            await ExecutionLogger.log("Communication", "Twilio error", str(e))
             return False
 
     @staticmethod
@@ -90,13 +90,13 @@ class CommunicationTools:
                     if data.get("sent") == "true" or data.get("message") == "ok":
                         return True
                     else:
-                        ExecutionLogger.log("Communication", "Ultramsg error", f"Data: {data}")
+                        await ExecutionLogger.log("Communication", "Ultramsg error", f"Data: {data}")
                         return False
                 else:
-                    ExecutionLogger.log("Communication", "Ultramsg failed", f"Status: {response.status_code}, Body: {response.text}")
+                    await ExecutionLogger.log("Communication", "Ultramsg failed", f"Status: {response.status_code}, Body: {response.text}")
                     return False
         except Exception as e:
-            ExecutionLogger.log("Communication", "Ultramsg error", str(e))
+            await ExecutionLogger.log("Communication", "Ultramsg error", str(e))
             return False
 
     @staticmethod

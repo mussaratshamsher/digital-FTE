@@ -1,3 +1,5 @@
+import { supabase } from "@/lib/auth/supabase";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const authService = {
@@ -18,7 +20,11 @@ export const authService = {
       throw new Error(error.detail || 'Login failed');
     }
     
-    return response.json();
+    const data = await response.json();
+    if (data.access_token) {
+      localStorage.setItem('access_token', data.access_token);
+    }
+    return data;
   },
 
   async signUp({ email, password }: any) {
@@ -39,7 +45,18 @@ export const authService = {
   },
 
   async signOut() {
-    // In a JWT-based system, local cleanup is sufficient.
+    // Clear Supabase session if exists
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    // Clear local JWT if exists
     localStorage.removeItem('access_token');
+    
+    // Clear all cookies as a fallback to ensure session is destroyed
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
   },
 };

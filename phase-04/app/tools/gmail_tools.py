@@ -15,13 +15,13 @@ class GmailService:
     _instance = None
 
     @classmethod
-    def get_service(cls):
+    async def get_service(cls):
         if cls._instance is None:
-            cls._instance = cls._authenticate()
+            cls._instance = await cls._authenticate()
         return cls._instance
 
     @staticmethod
-    def _authenticate():
+    async def _authenticate():
         # 1. Handle Cloud Deployment: Write JSON strings from environment to files if provided
         if settings.GMAIL_CREDENTIALS_JSON and not os.path.exists(settings.GMAIL_CREDENTIALS_PATH):
             with open(settings.GMAIL_CREDENTIALS_PATH, 'w') as f:
@@ -42,18 +42,18 @@ class GmailService:
                 try:
                     creds.refresh(Request())
                 except Exception as e:
-                    ExecutionLogger.log("Gmail", "Failed to refresh token", str(e))
+                    await ExecutionLogger.log("Gmail", "Failed to refresh token", str(e))
                     creds = None
             
             if not creds:
                 if not os.path.exists(settings.GMAIL_CREDENTIALS_PATH):
-                    ExecutionLogger.log("Gmail", "Credentials file missing", "Please provide credentials.json or GMAIL_CREDENTIALS_JSON env var")
+                    await ExecutionLogger.log("Gmail", "Credentials file missing", "Please provide credentials.json or GMAIL_CREDENTIALS_JSON env var")
                     return None
                 
                 # Check if running in a headless environment (e.g. Docker/HuggingFace)
                 is_headless = os.environ.get("HUGGINGFACE_ASSETS_CACHE") or os.environ.get("SPACE_ID")
                 if is_headless:
-                    ExecutionLogger.log("Gmail", "Auth Failed", "Cannot run local server in headless environment. Please provide a valid GMAIL_TOKEN_JSON.")
+                    await ExecutionLogger.log("Gmail", "Auth Failed", "Cannot run local server in headless environment. Please provide a valid GMAIL_TOKEN_JSON.")
                     return None
 
                 flow = InstalledAppFlow.from_client_secrets_file(
@@ -72,12 +72,12 @@ class GmailService:
             service = build('gmail', 'v1', credentials=creds, static_discovery=False)
             return service
         except Exception as e:
-            ExecutionLogger.log("Gmail", "Failed to build service", str(e))
+            await ExecutionLogger.log("Gmail", "Failed to build service", str(e))
             return None
 
     @staticmethod
     async def get_unread_messages():
-        service = GmailService.get_service()
+        service = await GmailService.get_service()
         if not service:
             return []
 
@@ -119,7 +119,7 @@ class GmailService:
 
     @staticmethod
     async def send_email(to: str, subject: str, body: str, thread_id: str = None):
-        service = GmailService.get_service()
+        service = await GmailService.get_service()
         if not service:
             return False
 
@@ -142,7 +142,7 @@ class GmailService:
 
     @staticmethod
     async def mark_as_read(message_id: str):
-        service = GmailService.get_service()
+        service = await GmailService.get_service()
         if not service:
             return False
         try:
