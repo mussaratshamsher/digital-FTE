@@ -57,7 +57,12 @@ class ChatService:
             return
 
         # 2. Relevancy Filter (Business/Job check)
-        keywords = ["job", "business", "service", "inquiry", "work", "apply", "support", "help", "price", "plan", "interested"]
+        keywords = [
+            "job", "business", "service", "inquiry", "work", "apply", "support", "help", 
+            "price", "plan", "interested", "capability", "capabilities", "budget", "cost", 
+            "ai", "automation", "ops", "factory", "digital", "fte", "who", "what", "how", 
+            "can", "info", "tell", "show", "list", "crm", "workflow", "qualified", "project", "leads"
+        ]
         if not any(k in message_content.lower() for k in keywords):
             await ExecutionLogger.log("System", "Relevancy Filter", f"Skipping non-business message: {message_content[:30]}")
             yield "I am an AI business assistant. Please ask about business, jobs, or our services."
